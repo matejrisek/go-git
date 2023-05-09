@@ -76,6 +76,8 @@ type CloneOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -127,6 +129,8 @@ type PullOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -183,6 +187,8 @@ type FetchOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -246,6 +252,8 @@ type PushOptions struct {
 	Options map[string]string
 	// Atomic sets option to be an atomic push
 	Atomic bool
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // ForceWithLease sets fields on the lease
@@ -630,10 +638,11 @@ type ListOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
-
 	// PeelingOption defines how peeled objects are handled during a
 	// remote list.
 	PeelingOption PeelingOption
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // PeelingOption represents the different ways to handle peeled references.
