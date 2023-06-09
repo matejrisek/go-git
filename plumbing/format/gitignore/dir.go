@@ -3,8 +3,9 @@ package gitignore
 import (
 	"bufio"
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
+	"os/user"
 	"strings"
 
 	"github.com/go-git/go-billy/v5"
@@ -25,6 +26,23 @@ const (
 
 // readIgnoreFile reads a specific git ignore file.
 func readIgnoreFile(fs billy.Filesystem, path []string, ignoreFile string) (ps []Pattern, err error) {
+
+	if strings.HasPrefix(ignoreFile, "~") {
+		firstSlash := strings.Index(ignoreFile, "/")
+		if firstSlash == 1 {
+			home, err := os.UserHomeDir()
+			if err == nil {
+				ignoreFile = strings.Replace(ignoreFile, "~", home, 1)
+			}
+		} else if firstSlash > 1 {
+			username := ignoreFile[1:firstSlash]
+			userAccount, err := user.Lookup(username)
+			if err == nil {
+				ignoreFile = strings.Replace(ignoreFile, ignoreFile[:firstSlash], userAccount.HomeDir, 1)
+			}
+		}
+	}
+
 	f, err := fs.Open(fs.Join(append(path, ignoreFile)...))
 	if err == nil {
 		defer f.Close()
@@ -86,7 +104,7 @@ func loadPatterns(fs billy.Filesystem, path string) (ps []Pattern, err error) {
 
 	defer gioutil.CheckClose(f, &err)
 
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return
 	}

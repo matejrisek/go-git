@@ -63,7 +63,7 @@ type CloneOptions struct {
 	// cloned repository does not have a worktree.
 	RecurseSubmodules SubmoduleRescursivity
 	// ShallowSubmodules limit cloning submodules to the 1 level of depth.
-	// This is akin to the git command --shallow-submodules.
+	// It matches the git command --shallow-submodules.
 	ShallowSubmodules bool
 	// Progress is where the human readable information sent by the server is
 	// stored, if nil nothing is stored and the capability (if supported)
@@ -76,6 +76,8 @@ type CloneOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -127,6 +129,8 @@ type PullOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -183,6 +187,8 @@ type FetchOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // Validate validates the fields and sets the default values.
@@ -246,6 +252,8 @@ type PushOptions struct {
 	Options map[string]string
 	// Atomic sets option to be an atomic push
 	Atomic bool
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
 }
 
 // ForceWithLease sets fields on the lease
@@ -630,10 +638,13 @@ type ListOptions struct {
 	InsecureSkipTLS bool
 	// CABundle specify additional ca bundle with system cert pool
 	CABundle []byte
-
 	// PeelingOption defines how peeled objects are handled during a
 	// remote list.
 	PeelingOption PeelingOption
+	// ProxyOptions provides info required for connecting to a proxy.
+	ProxyOptions transport.ProxyOptions
+	// Timeout specifies the timeout in seconds for list operations
+	Timeout int
 }
 
 // PeelingOption represents the different ways to handle peeled references.

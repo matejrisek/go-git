@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	stdioutil "io/ioutil"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -71,12 +71,28 @@ type Repository struct {
 	wt billy.Filesystem
 }
 
+type InitOptions struct {
+	// The default branch (e.g. "refs/heads/master")
+	DefaultBranch plumbing.ReferenceName
+}
+
 // Init creates an empty git repository, based on the given Storer and worktree.
 // The worktree Filesystem is optional, if nil a bare repository is created. If
 // the given storer is not empty ErrRepositoryAlreadyExists is returned
 func Init(s storage.Storer, worktree billy.Filesystem) (*Repository, error) {
+	options := InitOptions{
+		DefaultBranch: plumbing.Master,
+	}
+	return InitWithOptions(s, worktree, options)
+}
+
+func InitWithOptions(s storage.Storer, worktree billy.Filesystem, options InitOptions) (*Repository, error) {
 	if err := initStorer(s); err != nil {
 		return nil, err
+	}
+
+	if options.DefaultBranch == "" {
+		options.DefaultBranch = plumbing.Master
 	}
 
 	r := newRepository(s, worktree)
@@ -89,7 +105,7 @@ func Init(s storage.Storer, worktree billy.Filesystem) (*Repository, error) {
 		return nil, err
 	}
 
-	h := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.Master)
+	h := plumbing.NewSymbolicReference(plumbing.HEAD, options.DefaultBranch)
 	if err := s.SetReference(h); err != nil {
 		return nil, err
 	}
@@ -367,7 +383,7 @@ func dotGitFileToOSFilesystem(path string, fs billy.Filesystem) (bfs billy.Files
 	}
 	defer ioutil.CheckClose(f, &err)
 
-	b, err := stdioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +412,7 @@ func dotGitCommonDirectory(fs billy.Filesystem) (commonDir billy.Filesystem, err
 		return nil, err
 	}
 
-	b, err := stdioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -873,6 +889,7 @@ func (r *Repository) clone(ctx context.Context, o *CloneOptions) error {
 		RemoteName:      o.RemoteName,
 		InsecureSkipTLS: o.InsecureSkipTLS,
 		CABundle:        o.CABundle,
+		ProxyOptions:    o.ProxyOptions,
 	}, o.ReferenceName)
 	if err != nil {
 		return err
@@ -902,9 +919,8 @@ func (r *Repository) clone(ctx context.Context, o *CloneOptions) error {
 				Depth: func() int {
 					if o.ShallowSubmodules {
 						return 1
-					} else {
-						return 0
 					}
+					return 0
 				}(),
 				Auth: o.Auth,
 			}); err != nil {
@@ -957,7 +973,6 @@ func (r *Repository) cloneRefSpec(o *CloneOptions) []config.RefSpec {
 	case o.SingleBranch && o.ReferenceName == plumbing.HEAD:
 		return []config.RefSpec{
 			config.RefSpec(fmt.Sprintf(refspecSingleBranchHEAD, o.RemoteName)),
-			config.RefSpec(fmt.Sprintf(refspecSingleBranch, plumbing.Master.Short(), o.RemoteName)),
 		}
 	case o.SingleBranch:
 		return []config.RefSpec{
@@ -1019,21 +1034,9 @@ func (r *Repository) fetchAndUpdateReferences(
 		return nil, err
 	}
 
-	var resolvedRef *plumbing.Reference
-	// return error from checking the raw ref passed in
-	var rawRefError error
-	for _, rule := range append([]string{"%s"}, plumbing.RefRevParseRules...) {
-		resolvedRef, err = storer.ResolveReference(remoteRefs, plumbing.ReferenceName(fmt.Sprintf(rule, ref)))
-
-		if err == nil {
-			break
-		} else if rawRefError == nil {
-			rawRefError = err
-		}
-	}
-
+	resolvedRef, err := expand_ref(remoteRefs, ref)
 	if err != nil {
-		return nil, rawRefError
+		return nil, err
 	}
 
 	refsUpdated, err := r.updateReferences(remote.c.Fetch, resolvedRef)
@@ -1479,6 +1482,23 @@ func (r *Repository) Worktree() (*Worktree, error) {
 	return &Worktree{r: r, Filesystem: r.wt}, nil
 }
 
+func expand_ref(s storer.ReferenceStorer, ref plumbing.ReferenceName) (*plumbing.Reference, error) {
+	// For improving troubleshooting, this preserves the error for the provided `ref`,
+	// and returns the error for that specific ref in case all parse rules fails.
+	var ret error
+	for _, rule := range plumbing.RefRevParseRules {
+		resolvedRef, err := storer.ResolveReference(s, plumbing.ReferenceName(fmt.Sprintf(rule, ref)))
+
+		if err == nil {
+			return resolvedRef, nil
+		} else if ret == nil {
+			ret = err
+		}
+	}
+
+	return nil, ret
+}
+
 // ResolveRevision resolves revision to corresponding hash. It will always
 // resolve to a commit hash, not a tree or annotated tag.
 //
@@ -1508,13 +1528,9 @@ func (r *Repository) ResolveRevision(in plumbing.Revision) (*plumbing.Hash, erro
 
 			tryHashes = append(tryHashes, r.resolveHashPrefix(string(revisionRef))...)
 
-			for _, rule := range append([]string{"%s"}, plumbing.RefRevParseRules...) {
-				ref, err := storer.ResolveReference(r.Storer, plumbing.ReferenceName(fmt.Sprintf(rule, revisionRef)))
-
-				if err == nil {
-					tryHashes = append(tryHashes, ref.Hash())
-					break
-				}
+			ref, err := expand_ref(r.Storer, plumbing.ReferenceName(revisionRef))
+			if err == nil {
+				tryHashes = append(tryHashes, ref.Hash())
 			}
 
 			// in ambiguous cases, `git rev-parse` will emit a warning, but
