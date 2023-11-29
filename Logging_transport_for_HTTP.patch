@@ -1,0 +1,53 @@
+Subject: [PATCH] Logging transport for HTTP
+---
+Index: plumbing/transport/http/common.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/plumbing/transport/http/common.go b/plumbing/transport/http/common.go
+--- a/plumbing/transport/http/common.go	(revision c114af0cc97ac71f5ac21e7e510eaadec37dfba0)
++++ b/plumbing/transport/http/common.go	(date 1700408086417)
+@@ -9,6 +9,7 @@
+ 	"fmt"
+ 	"net"
+ 	"net/http"
++	"net/http/httputil"
+ 	"net/url"
+ 	"reflect"
+ 	"strconv"
+@@ -128,7 +129,7 @@
+ func NewClient(c *http.Client) transport.Transport {
+ 	if c == nil {
+ 		c = &http.Client{
+-			Transport: http.DefaultTransport,
++			Transport: &loggingTransport{},
+ 		}
+ 	}
+ 	return NewClientWithOptions(c, &ClientOptions{
+@@ -136,6 +137,25 @@
+ 	})
+ }
+ 
++type loggingTransport struct{}
++
++func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
++	bytes, _ := httputil.DumpRequestOut(r, true)
++
++	resp, err := http.DefaultTransport.RoundTrip(r)
++	// err is returned after dumping the response
++
++	respBytes, _ := httputil.DumpResponse(resp, true)
++
++	parsedRequest := string(bytes)
++	parsedResponse := string(respBytes)
++
++	fmt.Printf("%q\n", parsedRequest)
++	fmt.Printf("%q\n", parsedResponse)
++
++	return resp, err
++}
++
+ // NewClientWithOptions returns a new client configured with the provided net/http client
+ // and other custom options specific to the client.
+ // If the net/http client is nil or empty, it will use a net/http client configured

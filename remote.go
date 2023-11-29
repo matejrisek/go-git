@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"io"
 	"strings"
 	"time"
@@ -422,9 +423,11 @@ func (r *Remote) fetch(ctx context.Context, o *FetchOptions) (sto storer.Referen
 
 	defer ioutil.CheckClose(s, &err)
 
-	ar, err := s.AdvertisedReferencesContext(ctx)
-	if err != nil {
-		return nil, err
+	if o.ProtocolVersion != protocol.PROTOCOL_V2 {
+		ar, err := s.AdvertisedReferencesContext(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	req, err := r.newUploadPackRequest(o, ar)

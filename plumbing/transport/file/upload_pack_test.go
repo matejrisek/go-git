@@ -50,7 +50,7 @@ func (s *UploadPackSuite) TestCommandNoOutput(c *C) {
 	client := NewClient("true", "true")
 	session, err := client.NewUploadPackSession(s.Endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	ar, err := session.AdvertisedReferences()
+	ar, err := session.Connect()
 	c.Assert(err, IsNil)
 	c.Assert(ar, IsNil)
 }
@@ -63,7 +63,7 @@ func (s *UploadPackSuite) TestMalformedInputNoErrors(c *C) {
 	client := NewClient("yes", "yes")
 	session, err := client.NewUploadPackSession(s.Endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	ar, err := session.AdvertisedReferences()
+	ar, err := session.Connect()
 	c.Assert(err, NotNil)
 	c.Assert(ar, IsNil)
 }

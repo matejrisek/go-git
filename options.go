@@ -3,6 +3,7 @@ package git
 import (
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"regexp"
 	"strings"
 	"time"
@@ -198,6 +199,8 @@ type FetchOptions struct {
 	CABundle []byte
 	// ProxyOptions provides info required for connecting to a proxy.
 	ProxyOptions transport.ProxyOptions
+	// ProtocolVersion defines what protocol should be used for fetching operations.
+	ProtocolVersion protocol.Version
 }
 
 // Validate validates the fields and sets the default values.

@@ -107,7 +107,7 @@ type upSession struct {
 	session
 }
 
-func (s *upSession) AdvertisedReferences() (*packp.AdvRefs, error) {
+func (s *upSession) Connect() (*packp.AdvRefs, error) {
 	return s.AdvertisedReferencesContext(context.TODO())
 }
 
@@ -207,7 +207,7 @@ type rpSession struct {
 	unpackErr error
 }
 
-func (s *rpSession) AdvertisedReferences() (*packp.AdvRefs, error) {
+func (s *rpSession) Connect() (*packp.AdvRefs, error) {
 	return s.AdvertisedReferencesContext(context.TODO())
 }
 

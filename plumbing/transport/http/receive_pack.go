@@ -24,7 +24,7 @@ func newReceivePackSession(c *client, ep *transport.Endpoint, auth transport.Aut
 	return &rpSession{s}, err
 }
 
-func (s *rpSession) AdvertisedReferences() (*packp.AdvRefs, error) {
+func (s *rpSession) Connect() (*packp.AdvRefs, error) {
 	return advertisedReferences(context.TODO(), s.session, transport.ReceivePackServiceName)
 }
 

@@ -75,7 +75,7 @@ func (s *ProxyEnvSuite) TestCommand(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.AdvertisedReferences()
+	info, err := r.Connect()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 	proxyUsed := atomic.LoadInt32(&socksProxiedRequests) > 0

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -26,6 +27,7 @@ import (
 func applyHeadersToRequest(req *http.Request, content *bytes.Buffer, host string, requestType string) {
 	req.Header.Add("User-Agent", "git/1.0")
 	req.Header.Add("Host", host) // host:port
+	req.Header.Add("Git-Protocol", "version=2")
 
 	if content == nil {
 		req.Header.Add("Accept", "*/*")
@@ -128,12 +130,31 @@ var (
 func NewClient(c *http.Client) transport.Transport {
 	if c == nil {
 		c = &http.Client{
-			Transport: http.DefaultTransport,
+			Transport: &loggingTransport{},
 		}
 	}
 	return NewClientWithOptions(c, &ClientOptions{
 		CacheMaxEntries: defaultTransportCacheSize,
 	})
+}
+
+type loggingTransport struct{}
+
+func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	// err is returned after dumping the response
+
+	respBytes, _ := httputil.DumpResponse(resp, true)
+
+	parsedRequest := string(bytes)
+	parsedResponse := string(respBytes)
+
+	fmt.Printf("%q\n", parsedRequest)
+	fmt.Printf("%q\n", parsedResponse)
+
+	return resp, err
 }
 
 // NewClientWithOptions returns a new client configured with the provided net/http client

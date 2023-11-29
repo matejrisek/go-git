@@ -20,7 +20,7 @@ type ServerCommand struct {
 func ServeUploadPack(cmd ServerCommand, s transport.UploadPackSession) (err error) {
 	ioutil.CheckClose(cmd.Stdout, &err)
 
-	ar, err := s.AdvertisedReferences()
+	ar, err := s.Connect()
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func ServeUploadPack(cmd ServerCommand, s transport.UploadPackSession) (err erro
 }
 
 func ServeReceivePack(cmd ServerCommand, s transport.ReceivePackSession) error {
-	ar, err := s.AdvertisedReferences()
+	ar, err := s.Connect()
 	if err != nil {
 		return fmt.Errorf("internal error in advertised references: %s", err)
 	}

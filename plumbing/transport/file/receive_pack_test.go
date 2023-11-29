@@ -48,7 +48,7 @@ func (s *ReceivePackSuite) TestCommandNoOutput(c *C) {
 	client := NewClient("true", "true")
 	session, err := client.NewReceivePackSession(s.Endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	ar, err := session.AdvertisedReferences()
+	ar, err := session.Connect()
 	c.Assert(err, IsNil)
 	c.Assert(ar, IsNil)
 }
@@ -61,7 +61,7 @@ func (s *ReceivePackSuite) TestMalformedInputNoErrors(c *C) {
 	client := NewClient("yes", "yes")
 	session, err := client.NewReceivePackSession(s.Endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	ar, err := session.AdvertisedReferences()
+	ar, err := session.Connect()
 	c.Assert(err, NotNil)
 	c.Assert(ar, IsNil)
 }
