@@ -53,7 +53,11 @@ type Transport interface {
 }
 
 type Session interface {
-	Connect() (*packp.AdvRefs, error)
+	// AdvertisedReferences retrieves the advertised references for a
+	// repository.
+	// If the repository does not exist, returns ErrRepositoryNotFound.
+	// If the repository exists, but is empty, returns ErrEmptyRemoteRepository.
+	AdvertisedReferences() (*packp.AdvRefs, error)
 	// AdvertisedReferencesContext retrieves the advertised references for a
 	// repository.
 	// If the repository does not exist, returns ErrRepositoryNotFound.
@@ -69,7 +73,7 @@ type AuthMethod interface {
 
 // UploadPackSession represents a git-upload-pack session.
 // A git-upload-pack session has two steps: reference discovery
-// (Connect) and uploading pack (UploadPack).
+// (AdvertisedReferences) and uploading pack (UploadPack).
 type UploadPackSession interface {
 	Session
 	// UploadPack takes a git-upload-pack request and returns a response,
@@ -81,7 +85,7 @@ type UploadPackSession interface {
 
 // ReceivePackSession represents a git-receive-pack session.
 // A git-receive-pack session has two steps: reference discovery
-// (Connect) and receiving pack (ReceivePack).
+// (AdvertisedReferences) and receiving pack (ReceivePack).
 // In that order.
 type ReceivePackSession interface {
 	Session

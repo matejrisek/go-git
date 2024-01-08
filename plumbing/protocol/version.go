@@ -8,7 +8,7 @@ const (
 	PROTOCOL_V2         = "protocol_version_2"
 )
 
-func DetermineProtocolVersionClient() Version {
-	version := PROTOCOL_V0
-
-}
+//func DetermineProtocolVersionClient() Version {
+//	version := PROTOCOL_V0
+//
+//}

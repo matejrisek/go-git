@@ -24,7 +24,7 @@ func newUploadPackSession(c *client, ep *transport.Endpoint, auth transport.Auth
 	return &upSession{s}, err
 }
 
-func (s *upSession) Connect() (*packp.AdvRefs, error) {
+func (s *upSession) AdvertisedReferences() (*packp.AdvRefs, error) {
 	return advertisedReferences(context.TODO(), s.session, transport.UploadPackServiceName)
 }
 

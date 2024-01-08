@@ -33,7 +33,7 @@ func (s *ReceivePackSuite) TestAdvertisedReferencesEmpty(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(ar.Head, IsNil)
 }
@@ -41,7 +41,7 @@ func (s *ReceivePackSuite) TestAdvertisedReferencesEmpty(c *C) {
 func (s *ReceivePackSuite) TestAdvertisedReferencesNotExists(c *C) {
 	r, err := s.Client.NewReceivePackSession(s.NonExistentEndpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, Equals, transport.ErrRepositoryNotFound)
 	c.Assert(ar, IsNil)
 	c.Assert(r.Close(), IsNil)
@@ -63,10 +63,10 @@ func (s *ReceivePackSuite) TestCallAdvertisedReferenceTwice(c *C) {
 	r, err := s.Client.NewReceivePackSession(s.Endpoint, s.EmptyAuth)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 	c.Assert(err, IsNil)
-	ar1, err := r.Connect()
+	ar1, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(ar1, NotNil)
-	ar2, err := r.Connect()
+	ar2, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(ar2, DeepEquals, ar1)
 }
@@ -76,7 +76,7 @@ func (s *ReceivePackSuite) TestDefaultBranch(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	ref, ok := info.References["refs/heads/master"]
 	c.Assert(ok, Equals, true)
@@ -88,7 +88,7 @@ func (s *ReceivePackSuite) TestCapabilities(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info.Capabilities.Get("agent"), HasLen, 1)
 }
@@ -117,7 +117,7 @@ func (s *ReceivePackSuite) TestSendPackWithContext(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 
@@ -248,7 +248,7 @@ func (s *ReceivePackSuite) receivePackNoCheck(c *C, ep *transport.Endpoint,
 	defer func() { c.Assert(r.Close(), IsNil, comment) }()
 
 	if callAdvertisedReferences {
-		info, err := r.Connect()
+		info, err := r.AdvertisedReferences()
 		c.Assert(err, IsNil, comment)
 		c.Assert(info, NotNil, comment)
 	}
@@ -295,7 +295,7 @@ func (s *ReceivePackSuite) checkRemoteReference(c *C, ep *transport.Endpoint,
 	r, err := s.Client.NewUploadPackSession(ep, s.EmptyAuth)
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil, Commentf("endpoint: %s", ep.String()))
 	ref, ok := ar.References[refName]
 	if head == plumbing.ZeroHash {
@@ -317,7 +317,7 @@ func (s *ReceivePackSuite) testSendPackAddReference(c *C) {
 
 	fixture := fixtures.Basic().ByTag("packfile").One()
 
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 
 	req := packp.NewReferenceUpdateRequest()
@@ -340,7 +340,7 @@ func (s *ReceivePackSuite) testSendPackDeleteReference(c *C) {
 
 	fixture := fixtures.Basic().ByTag("packfile").One()
 
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 
 	req := packp.NewReferenceUpdateRequest()

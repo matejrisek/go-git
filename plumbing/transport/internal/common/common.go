@@ -173,7 +173,7 @@ func (c *client) listenFirstError(r io.Reader) chan string {
 	return errLine
 }
 
-func (s *session) Connect() (*packp.AdvRefs, error) {
+func (s *session) AdvertisedReferences() (*packp.AdvRefs, error) {
 	return s.AdvertisedReferencesContext(context.TODO())
 }
 
@@ -311,7 +311,7 @@ func (s *session) onError(err error) {
 }
 
 func (s *session) ReceivePack(ctx context.Context, req *packp.ReferenceUpdateRequest) (*packp.ReportStatus, error) {
-	if _, err := s.Connect(); err != nil {
+	if _, err := s.AdvertisedReferences(); err != nil {
 		return nil, err
 	}
 

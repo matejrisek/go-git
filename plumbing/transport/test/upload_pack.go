@@ -31,7 +31,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesEmpty(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, Equals, transport.ErrEmptyRemoteRepository)
 	c.Assert(ar, IsNil)
 }
@@ -41,7 +41,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesNotExists(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	ar, err := r.Connect()
+	ar, err := r.AdvertisedReferences()
 	c.Assert(err, Equals, transport.ErrRepositoryNotFound)
 	c.Assert(ar, IsNil)
 
@@ -59,10 +59,10 @@ func (s *UploadPackSuite) TestCallAdvertisedReferenceTwice(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	ar1, err := r.Connect()
+	ar1, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(ar1, NotNil)
-	ar2, err := r.Connect()
+	ar2, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(ar2, DeepEquals, ar1)
 }
@@ -72,7 +72,7 @@ func (s *UploadPackSuite) TestDefaultBranch(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	symrefs := info.Capabilities.Get(capability.SymRef)
 	c.Assert(symrefs, HasLen, 1)
@@ -84,7 +84,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesFilterUnsupported(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info.Capabilities.Supports(capability.MultiACK), Equals, false)
 }
@@ -94,7 +94,7 @@ func (s *UploadPackSuite) TestCapabilities(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info.Capabilities.Get(capability.Agent), HasLen, 1)
 }
@@ -121,7 +121,7 @@ func (s *UploadPackSuite) TestUploadPackWithContext(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 
@@ -139,7 +139,7 @@ func (s *UploadPackSuite) TestUploadPackWithContextOnRead(c *C) {
 	r, err := s.Client.NewUploadPackSession(s.Endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 
@@ -166,7 +166,7 @@ func (s *UploadPackSuite) TestUploadPackFull(c *C) {
 	c.Assert(err, IsNil)
 	defer func() { c.Assert(r.Close(), IsNil) }()
 
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 

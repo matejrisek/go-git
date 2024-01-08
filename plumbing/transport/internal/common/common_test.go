@@ -133,7 +133,7 @@ remote:`,
 				t.Fatalf("unexpected error: %s", err)
 			}
 
-			_, err = sess.Connect()
+			_, err = sess.AdvertisedReferences()
 
 			if tt.wantErr != nil {
 				if tt.wantErr != err {

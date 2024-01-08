@@ -36,7 +36,7 @@ func (s *UploadPackSuite) SetUpSuite(c *C) {
 func (s *UploadPackSuite) TestAdvertisedReferencesNotExists(c *C) {
 	r, err := s.Client.NewUploadPackSession(s.NonExistentEndpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
-	info, err := r.Connect()
+	info, err := r.AdvertisedReferences()
 	c.Assert(err, Equals, transport.ErrRepositoryNotFound)
 	c.Assert(info, IsNil)
 }
@@ -84,7 +84,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesRedirectPath(c *C) {
 	session, err := s.Client.NewUploadPackSession(endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
 
-	info, err := session.Connect()
+	info, err := session.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 
@@ -98,7 +98,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesRedirectSchema(c *C) {
 	session, err := s.Client.NewUploadPackSession(endpoint, s.EmptyAuth)
 	c.Assert(err, IsNil)
 
-	info, err := session.Connect()
+	info, err := session.AdvertisedReferences()
 	c.Assert(err, IsNil)
 	c.Assert(info, NotNil)
 

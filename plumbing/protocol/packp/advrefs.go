@@ -20,7 +20,7 @@ type AdvRefs struct {
 	// When using this message over (smart) HTTP, you have to add a pktline
 	// before the whole thing with the following payload:
 	//
-	// '# service=$servicename" LF
+	// "# service=$servicename" LF
 	//
 	// Moreover, some (all) git HTTP smart servers will send a flush-pkt
 	// just after the first pkt-line.
@@ -94,7 +94,7 @@ func (a *AdvRefs) addRefs(s storer.ReferenceStorer) error {
 // If the server does not support symrefs capability,
 // we need to guess the reference where HEAD is pointing to.
 //
-// Git versions prior to 1.8.4.3 has an special procedure to get
+// Git versions prior to 1.8.4.3 has a special procedure to get
 // the reference where is pointing to HEAD:
 //   - Check if a reference called master exists. If exists and it
 //     has the same hash as HEAD hash, we can say that HEAD is pointing to master
@@ -202,7 +202,7 @@ func (a *AdvRefs) supportSymrefs() bool {
 	return a.Capabilities.Supports(capability.SymRef)
 }
 
-// IsEmpty returns true if doesn't contain any reference.
+// IsEmpty returns true if it doesn't contain any reference.
 func (a *AdvRefs) IsEmpty() bool {
 	return a.Head == nil &&
 		len(a.References) == 0 &&
