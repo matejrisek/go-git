@@ -2,6 +2,7 @@ package packp
 
 import (
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"sort"
 	"strings"
 
@@ -40,6 +41,8 @@ type AdvRefs struct {
 	Peeled map[string]plumbing.Hash
 	// Shallows are the shallow object ids.
 	Shallows []plumbing.Hash
+	// ProtocolVersion is the protocol version used by the server.
+	ProtocolVersion protocol.Version
 }
 
 // NewAdvRefs returns a pointer to a new AdvRefs value, ready to be used.

@@ -5,7 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/format/pktline"
@@ -97,7 +100,7 @@ func decodePrefix(d *advRefsDecoder) decoderStateFn {
 	}
 
 	if !isPrefix(d.line) {
-		return decodeFirstHash
+		return determineProtocolVersion
 	}
 
 	tmp := make([]byte, len(d.line))
@@ -108,7 +111,7 @@ func decodePrefix(d *advRefsDecoder) decoderStateFn {
 	}
 
 	if !isFlush(d.line) {
-		return decodeFirstHash
+		return determineProtocolVersion
 	}
 
 	d.data.Prefix = append(d.data.Prefix, pktline.Flush)
@@ -116,11 +119,42 @@ func decodePrefix(d *advRefsDecoder) decoderStateFn {
 		return nil
 	}
 
-	return decodeFirstHash
+	return determineProtocolVersion
 }
 
 func isPrefix(payload []byte) bool {
 	return len(payload) > 0 && payload[0] == '#'
+}
+
+func determineProtocolVersion(d *advRefsDecoder) decoderStateFn {
+	if strings.HasPrefix(string(d.line), "version ") {
+		versionString := strings.TrimPrefix(string(d.line), "version ")
+		version, err := strconv.Atoi(versionString)
+		if err != nil {
+			d.error("server returned a protocol version which is not a number")
+		}
+
+		switch version {
+		case 0:
+			d.error("protocol error: server explicitly said version 0")
+		case 1:
+			d.data.ProtocolVersion = protocol.PROTOCOL_V1
+		case 2:
+			d.data.ProtocolVersion = protocol.PROTOCOL_V2
+		default:
+			d.error("server is speaking an unknown protocol: %d", version)
+		}
+	} else {
+		d.data.ProtocolVersion = protocol.PROTOCOL_V0
+	}
+	if ok := d.nextLine(); !ok {
+		return nil
+	}
+	if protocol.PROTOCOL_V2 == d.data.ProtocolVersion {
+		return decodeCaps
+	} else {
+		return decodeFirstHash
+	}
 }
 
 // If the first hash is zero, then a no-refs is coming. Otherwise, a
@@ -201,12 +235,25 @@ func decodeFirstRef(l *advRefsDecoder) decoderStateFn {
 }
 
 func decodeCaps(p *advRefsDecoder) decoderStateFn {
-	if err := p.data.Capabilities.Decode(p.line); err != nil {
-		p.error("invalid capabilities: %s", err)
-		return nil
-	}
+	if protocol.PROTOCOL_V2 == p.data.ProtocolVersion {
+		for hasNext := true; hasNext; hasNext = p.nextLine() {
+			if isFlush(p.line) {
+				break
+			}
+			if err := p.data.Capabilities.Decode(p.line); err != nil {
+				p.error("invalid capabilities: %s", err)
+				return nil
+			}
+		}
 
-	return decodeOtherRefs
+		return nil
+	} else {
+		if err := p.data.Capabilities.Decode(p.line); err != nil {
+			p.error("invalid capabilities: %s", err)
+			return nil
+		}
+		return decodeOtherRefs
+	}
 }
 
 // The refs are either tips (obj-id SP refname) or a peeled (obj-id SP refname^{}).

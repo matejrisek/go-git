@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -80,9 +81,11 @@ func advertisedReferences(ctx context.Context, s *session, serviceName string) (
 	// advrefs_decode.decodeFirstHash, which expects a flush-pkt instead.
 	//
 	// This logic aligns with plumbing/transport/internal/common/common.go.
-	if ar.IsEmpty() &&
+	if (ar.IsEmpty() &&
 		// Empty repositories are valid for git-receive-pack.
-		transport.ReceivePackServiceName != serviceName {
+		transport.ReceivePackServiceName != serviceName) &&
+		// Protocol V2 does not advertise references by default.
+		ar.ProtocolVersion != protocol.PROTOCOL_V2 {
 		return nil, transport.ErrEmptyRemoteRepository
 	}
 

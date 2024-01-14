@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/plumbing/protocol"
 	"io"
 	"strings"
 	"time"
@@ -1141,6 +1142,10 @@ func (r *Remote) newUploadPackRequest(
 }
 
 func (r *Remote) isSupportedRefSpec(refs []config.RefSpec, ar *packp.AdvRefs) error {
+	if ar.ProtocolVersion == protocol.PROTOCOL_V2 {
+		return nil
+	}
+
 	var containsIsExact bool
 	for _, ref := range refs {
 		if ref.IsExactSHA1() {
